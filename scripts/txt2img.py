@@ -213,7 +213,7 @@ def put_watermark(img, wm_encoder=None):
 
 def main(opt):
     seed_everything(opt.seed)
-
+# 加载配置文件
     config = OmegaConf.load(f"{opt.config}")
     device = torch.device("cuda") if opt.device == "cuda" else torch.device("cpu")
     model = load_model_from_config(config, f"{opt.ckpt}", device)

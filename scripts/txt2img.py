@@ -213,9 +213,11 @@ def put_watermark(img, wm_encoder=None):
 
 def main(opt):
     seed_everything(opt.seed)
-# 加载配置文件
+     # 加载配置文件
     config = OmegaConf.load(f"{opt.config}")
+    # 判断CPU,GPU
     device = torch.device("cuda") if opt.device == "cuda" else torch.device("cpu")
+    # 从加载的文件创建模型
     model = load_model_from_config(config, f"{opt.ckpt}", device)
 
     if opt.plms:
@@ -316,18 +318,21 @@ def main(opt):
 
         with torch.no_grad(), additional_context:
             for _ in range(3):
+                # 提示词获得的embedding
                 c = model.get_learned_conditioning(prompts)
+            # 采样 
             samples_ddim, _ = sampler.sample(S=5,
-                                             conditioning=c,
+                                             conditioning=c,# 提示词获得的embedding
                                              batch_size=batch_size,
                                              shape=shape,
                                              verbose=False,
                                              unconditional_guidance_scale=opt.scale,
-                                             unconditional_conditioning=uc,
+                                             unconditional_conditioning=uc,#空提示词获得的embedding
                                              eta=opt.ddim_eta,
                                              x_T=start_code)
             print("Running a forward pass for decoder")
             for _ in range(3):
+                # 采样结果（初始噪声）经过扩散模型，输出给第一阶段VAE解码器，VAE解码，得到最终图像输出值
                 x_samples_ddim = model.decode_first_stage(samples_ddim)
 
     precision_scope = autocast if opt.precision=="autocast" or opt.bf16 else nullcontext
